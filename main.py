@@ -20,7 +20,15 @@ async def root():
     return {"message": "Hello World"}
 
 @app.get("/checkCompany/")
-async def get_company(company_name: str, address_line1: str, phone_number: str, zip: str):
+async def get_company(company_name: str, line1: str, phone_number: str, postal_code: str):
     df = companies
-    df = df.loc[df['company_name'] == company_name].loc[df['line1'] == address_line1].loc[df['phone_number'] == phone_number].loc[df['postal_code'] == zip]
-    return df.to_json(orient = 'records')
+    fullMatch = df.loc[df['company_name'] == company_name].loc[df['line1'] == line1].loc[df['phone_number'] == phone_number].loc[df['postal_code'] == postal_code]
+    if not fullMatch.empty:
+        return {"fullMatch": fullMatch.to_dict(orient='records'), "partialMatches": None}
+    partialMatches = []
+    for var, val in vars().items():
+        try:
+            partialMatches.append(df.loc[df[var] == val].to_dict(orient='records'))
+        except:
+            continue
+    return {"fullMatch": None, "partialMatches": partialMatches}
